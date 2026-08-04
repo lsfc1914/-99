@@ -1,0 +1,6 @@
+{
+  "name": "Telegram",
+  "description": "Модерно чат приложение с поддръжка на лични съобщения, групи, канали, анкети, AI бот и персонализирани теми.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
