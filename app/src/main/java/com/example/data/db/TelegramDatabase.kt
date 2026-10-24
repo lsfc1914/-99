@@ -10,6 +10,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.Chat
 import com.example.data.model.Message
 import com.example.data.model.RoomConverters
@@ -78,7 +80,7 @@ interface MessageDao {
     fun searchMessages(query: String): Flow<List<Message>>
 }
 
-@Database(entities = [Chat::class, Message::class], version = 1, exportSchema = false)
+@Database(entities = [Chat::class, Message::class], version = 2, exportSchema = false)
 @TypeConverters(RoomConverters::class)
 abstract class TelegramDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
@@ -88,13 +90,23 @@ abstract class TelegramDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: TelegramDatabase? = null
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_messages_chatId_timestamp` ON `messages` (`chatId`, `timestamp`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_messages_chatId_isPinned_timestamp` ON `messages` (`chatId`, `isPinned`, `timestamp`)")
+            }
+        }
+
         fun getInstance(context: Context): TelegramDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     TelegramDatabase::class.java,
                     "telegram_app_db"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
