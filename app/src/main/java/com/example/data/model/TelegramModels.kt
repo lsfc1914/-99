@@ -1,6 +1,7 @@
 package com.example.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import com.squareup.moshi.Moshi
@@ -36,7 +37,13 @@ data class Chat(
     val bio: String = ""
 )
 
-@Entity(tableName = "messages")
+@Entity(
+    tableName = "messages",
+    indices = [
+        Index(value = ["chatId", "timestamp"]),
+        Index(value = ["chatId", "isPinned", "timestamp"])
+    ]
+)
 data class Message(
     @PrimaryKey val id: String,
     val chatId: String,
